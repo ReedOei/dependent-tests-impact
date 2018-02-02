@@ -12,15 +12,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import edu.washington.cs.dt.impact.data.TestData;
 import edu.washington.cs.dt.impact.data.TestFunctionStatement;
 import edu.washington.cs.dt.impact.order.Standard;
 import edu.washington.cs.dt.impact.tools.FileTools;
@@ -47,28 +54,34 @@ public class Test {
         }
         methodList = new ArrayList<TestFunctionStatement>(allMethodList);
         if (dependentTestsFile != null) {
-            processDependentTests(dependentTestsFile, null, allMethodList);
+            processDependentTests(dependentTestsFile, allMethodList);
         }
     }
 
-    public Test(COVERAGE coverage, List<String> allDTList, File folder) {
+    public Test(COVERAGE coverage, Map<String, Set<TestData>> knownDependencies, File folder) {
         testToAllLines = new HashMap<String, Set<String>>();
         allCoverageLines = new HashSet<String>();
         setAllLines(folder);
         allMethodList = listFilesForFolder(coverage);
         methodList = new ArrayList<TestFunctionStatement>(allMethodList);
-        if (allDTList != null) {
-            processDependentTests(null, allDTList, allMethodList);
+
+        processDependentTests(knownDependencies,allMethodList);
+    }
+
+    public void resetDTList(final Map<String, Set<TestData>> knownDependencies) {
+        if (knownDependencies != null) {
+            processDependentTests(knownDependencies, allMethodList);
         }
     }
 
-    public void resetDTList(List<String> allDTList) {
-        if (allDTList != null) {
-            processDependentTests(null, allDTList, allMethodList);
-        }
+    private void processDependentTests(File dependentTestsFile,
+                                       List<TestFunctionStatement> dtMethodList) {
+        processDependentTests(parseDependentTestsFile(dependentTestsFile),
+                              dtMethodList);
     }
 
-    protected void processDependentTests(File dependentTestsFile, List<String> allDTList, List<TestFunctionStatement> dtMethodList) {
+    private void processDependentTests(Map<String, Set<TestData>> knownDependencies,
+                                       List<TestFunctionStatement> dtMethodList) {
         // list of tests that when executed before reveals the dependent test
         Map<String, List<String>> execBefore = new HashMap<String, List<String>>();
         // list of tests that when executed after reveals the dependent test
@@ -79,11 +92,7 @@ public class Test {
             nameToMethodData.put(methodData.getName(), methodData);
         }
 
-        if (dependentTestsFile != null && dependentTestsFile.isFile()) {
-            parseDependentTestsFile(dependentTestsFile, execBefore, execAfter);
-        } else {
-            parseDependentTestsList(allDTList, execBefore, execAfter);
-        }
+        processKnownDependencies(knownDependencies, execBefore, execAfter);
 
         for (String testName : execBefore.keySet()) {
             if (nameToMethodData.get(testName) == null && origOrderList.contains(testName)) {
@@ -97,11 +106,11 @@ public class Test {
                     nameToMethodData.put(dtTest, tmd);
                 }
                 if (nameToMethodData.get(testName) != null && tmd != null) {
-                    nameToMethodData.get(testName).addDependentTest(tmd, true);                	
+                    nameToMethodData.get(testName).addDependentTest(tmd, true);
                 }
             }
             if (nameToMethodData.get(testName) != null) {
-                nameToMethodData.get(testName).reset();            	
+                nameToMethodData.get(testName).reset();
             }
         }
 
@@ -117,88 +126,57 @@ public class Test {
                     nameToMethodData.put(dtTest, tmd);
                 }
                 if (nameToMethodData.get(testName) != null && tmd != null) {
-                    nameToMethodData.get(testName).addDependentTest(tmd, false);                	
+                    nameToMethodData.get(testName).addDependentTest(tmd, false);
                 }
             }
             if (nameToMethodData.get(testName) != null) {
-                nameToMethodData.get(testName).reset();            	
+                nameToMethodData.get(testName).reset();
             }
         }
     }
 
-    private void parseDependentTestsList(List<String> allDTList, Map<String, List<String>> execBefore,
-            Map<String, List<String>> execAfter) {
-        for (int j = 0; j < allDTList.size();) {
-            String line = allDTList.get(j);
-            if (line.length() == 0) {
-                continue;
-            }
-            String testName = line.split(Constants.TEST_LINE)[1];
-            // revealed behavior line
-            j += 2;
+    private void processKnownDependencies(Map<String, Set<TestData>> knownDependencies,
+                                          Map<String, List<String>> execBefore,
+                                          Map<String, List<String>> execAfter) {
+        for (final Map.Entry<String, Set<TestData>> dependency : knownDependencies.entrySet()) {
+            final Set<TestData> dependencies = dependency.getValue();
 
-            // tests reveal dependence when executed after testName
-            line = allDTList.get(j);
-            String afterTestsStr = line.split(Constants.EXECUTE_AFTER)[1];
-            if (afterTestsStr.length() > 2) {
-                afterTestsStr = afterTestsStr.substring(1, afterTestsStr.length() - 1);
-                execAfter.put(testName, Arrays.asList(afterTestsStr.split(Constants.TEST_SEP)));
-            }
-            // revealed behavior line
-            j += 2;
+            execAfter.put(
+                    dependency.getKey(),
+                    dependencies.stream()
+                            .flatMap(TestData::getAfterTests)
+                            .collect(Collectors.toList()));
 
-            // tests reveal dependence when executed before testName
-            line = allDTList.get(j);
-            String beforeTestsStr = line.split(Constants.EXECUTE_AFTER)[1];
-            if (beforeTestsStr.length() > 2) {
-                beforeTestsStr = beforeTestsStr.substring(1, beforeTestsStr.length() - 1);
-                execBefore.put(testName, Arrays.asList(beforeTestsStr.split(Constants.TEST_SEP)));
-            }
-            j += 1;
+            execBefore.put(
+                    dependency.getKey(),
+                    dependencies.stream()
+                            .flatMap(TestData::getBeforeTests)
+                            .collect(Collectors.toList()));
         }
     }
 
-    private void parseDependentTestsFile(File dependentTestsFile, Map<String, List<String>> execBefore,
-            Map<String, List<String>> execAfter) {
-        BufferedReader br;
+    private Map<String, Set<TestData>> parseDependentTestsFile(File dependentTestsFile) {
+        final Map<String, Set<TestData>> knownDependencies = new HashMap<>();
+
         try {
-            br = new BufferedReader(new FileReader(dependentTestsFile));
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.length() == 0) {
-                    continue;
-                }
+            final String contents =
+                    new String(Files.readAllBytes(Paths.get(dependentTestsFile.getCanonicalPath())), StandardCharsets.UTF_8);
 
-                String testName = line.split(Constants.TEST_LINE)[1];
+            for (final String testDataStr : contents.split("\n\n")) {
+                final TestData testData = TestData.fromString(testDataStr);
 
-                // intended behavior line
-                br.readLine();
-
-                // tests reveal dependence when executed after testName
-                line = br.readLine();
-                String afterTestsStr = line.split(Constants.EXECUTE_AFTER)[1];
-                if (afterTestsStr.length() > 2) {
-                    afterTestsStr = afterTestsStr.substring(1, afterTestsStr.length() - 1);
-                    execAfter.put(testName, Arrays.asList(afterTestsStr.split(Constants.TEST_SEP)));
-                }
-
-                // revealed behavior line
-                br.readLine();
-
-                // tests reveal dependence when executed before testName
-                line = br.readLine();
-                String beforeTestsStr = line.split(Constants.EXECUTE_AFTER)[1];
-                if (beforeTestsStr.length() > 2) {
-                    beforeTestsStr = beforeTestsStr.substring(1, beforeTestsStr.length() - 1);
-                    execBefore.put(testName, Arrays.asList(beforeTestsStr.split(Constants.TEST_SEP)));
-                }
+                knownDependencies.merge(testData.dependentTest, Collections.singleton(testData),
+                        (testName, dependencies) -> {
+                            dependencies.add(testData);
+                            return dependencies;
+                        });
             }
-            br.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return knownDependencies;
     }
 
     private List<TestFunctionStatement> listFilesForFolder(final COVERAGE coverage) {
@@ -237,7 +215,7 @@ public class Test {
                         while ((line = br.readLine()) != null) {
                             lines.add(line);
                         }
-                        testToAllLines.put(fileEntry.getName(), lines);                    	
+                        testToAllLines.put(fileEntry.getName(), lines);
                         br.close();
                     }
                 } catch (FileNotFoundException e) {

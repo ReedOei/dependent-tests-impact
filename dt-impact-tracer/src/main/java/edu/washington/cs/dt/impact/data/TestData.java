@@ -144,6 +144,14 @@ public class TestData {
         );
     }
 
+    public Stream<String> getAfterTests() {
+        return afterTests.stream();
+    }
+
+    public Stream<String> getBeforeTests() {
+        return beforeTests.stream();
+    }
+
     @Override
     public final boolean equals(final Object o) {
         if (o instanceof TestData) {
