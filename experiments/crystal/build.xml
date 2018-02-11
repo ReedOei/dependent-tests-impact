@@ -10,10 +10,10 @@
     <property name="source" value="1.7"/>
     <path id="crystal.classpath">
         <pathelement location="bin"/>
-        <pathelement location="lib/lib/commons-io-1.4.jar"/>
-        <pathelement location="lib/lib/hgKit-279.jar"/>
-        <pathelement location="lib/lib/jdom-1.1.jar"/>
-        <pathelement location="lib/lib/log4j-1.2.15.jar"/>
+        <pathelement location="lib/commons-io-1.4.jar"/>
+        <pathelement location="lib/hgKit-279.jar"/>
+        <pathelement location="lib/jdom-1.1.jar"/>
+        <pathelement location="lib/log4j-1.2.15.jar"/>
         <pathelement location="../impact-tools/junit.jar"/>
         <pathelement location="../impact-tools/org.hamcrest.core_1.3.0.v201303031735.jar"/>
     </path>
@@ -65,10 +65,10 @@
 	  <junit>
 	    <classpath>
 	        <pathelement location="bin"/>
-	        <pathelement location="lib/lib/commons-io-1.4.jar"/>
-	        <pathelement location="lib/lib/hgKit-279.jar"/>
-	        <pathelement location="lib/lib/jdom-1.1.jar"/>
-	        <pathelement location="lib/lib/log4j-1.2.15.jar"/>
+	        <pathelement location="lib/commons-io-1.4.jar"/>
+	        <pathelement location="lib/hgKit-279.jar"/>
+	        <pathelement location="lib/jdom-1.1.jar"/>
+	        <pathelement location="lib/log4j-1.2.15.jar"/>
 	        <pathelement location="../impact-tools/junit.jar"/>
 	        <pathelement location="../impact-tools/org.hamcrest.core_1.3.0.v201303031735.jar"/>
 	    </classpath>

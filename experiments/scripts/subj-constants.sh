@@ -72,7 +72,7 @@ nextExpDirectories=(
 )
 # Classpath to run the new subject's automatically-generated and human-written tests.
 nextExpCP=(
-  ${rootDir}/impact-tools/*:${rootDir}/crystal/bin/:${rootDir}/crystal/libs/lib/*
+  ${rootDir}/impact-tools/*:${rootDir}/crystal/bin/:${rootDir}/crystal/lib/*
   ${rootDir}/impact-tools/*:${rootDir}/jfreechart-1.0.16/bin/:${rootDir}/jfreechart-1.0.16/lib/*
   ${rootDir}/impact-tools/*:${rootDir}/jodatime-d6791cb5f9/bin/:${rootDir}/jodatime-d6791cb5f9/resources/:${rootDir}/jodatime-d6791cb5f9/lib/*
   ${rootDir}/impact-tools/*:${rootDir}/dynoptic-ea407ba0a750/bin/:${rootDir}/synoptic/lib/*:${rootDir}/synoptic-ea407ba0a750/bin/:${rootDir}/daikonizer-ea407ba0a750/bin/
