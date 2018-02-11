@@ -19,7 +19,7 @@ public class TestData {
     public final Set<String> afterTests;
     public final RESULT revealed;
 
-    private final List<String> revealingOrder;
+    public final List<String> revealingOrder;
 
     public TestData(final String dependentTest,
                     final RESULT intended,
@@ -175,7 +175,7 @@ public class TestData {
                 // If this test comes before the dependent test, then we need to move it to after.
                 if (testIndex != -1 && testIndex < index) {
                     currentOrder.remove(testIndex);
-                    currentOrder.add(index + 1, dependency);
+                    currentOrder.add(index, dependency); // index is now one after the dt.
                 }
             }
         }

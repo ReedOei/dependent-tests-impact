@@ -26,13 +26,17 @@
 
 package edu.washington.cs.dt.impact.runner;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import edu.washington.cs.dt.RESULT;
+import edu.washington.cs.dt.impact.data.TestData;
 import edu.washington.cs.dt.impact.data.WrapperTestList;
 import edu.washington.cs.dt.impact.technique.Parallelization;
 import edu.washington.cs.dt.impact.technique.Prioritization;
@@ -40,6 +44,7 @@ import edu.washington.cs.dt.impact.technique.Selection;
 import edu.washington.cs.dt.impact.technique.Test;
 import edu.washington.cs.dt.impact.tools.CrossReferencer;
 import edu.washington.cs.dt.impact.tools.DependentTestFinder;
+import edu.washington.cs.dt.impact.tools.FileTools;
 import edu.washington.cs.dt.impact.util.Constants.TECHNIQUE;
 
 public class OneConfigurationRunner extends Runner {
@@ -50,7 +55,8 @@ public class OneConfigurationRunner extends Runner {
         ParaThreads paraObj = new ParaThreads(threads);
         //initialize dtfObj in case threads not specified
         DependentTestFinder dtfObj = new DependentTestFinder();
-        
+
+        System.out.println("Running tests in original order.");
         Map<String, RESULT> nameToOrigResults = getCurrentOrderTestListResults(origOrderTestList, filesToDelete);
 
         // capture start time
@@ -82,9 +88,12 @@ public class OneConfigurationRunner extends Runner {
             WrapperTestList testList = new WrapperTestList();
             List<String> currentOrderTestList = getCurrentTestList(testObj, i);
             // ImpactMain
+            System.out.println("Running tests in new order.");
             Map<String, RESULT> nameToTestResults = getCurrentOrderTestListResults(currentOrderTestList, filesToDelete);
             // CrossReferencer
             Set<String> changedTests = CrossReferencer.compareResults(nameToOrigResults, nameToTestResults, false);
+
+            System.out.println("Detected " + changedTests.size() + " changed tests.");
 
             Set<String> fixedDT = new HashSet<>();
             if (resolveDependences != null) {
@@ -127,9 +136,11 @@ public class OneConfigurationRunner extends Runner {
                     testObj.resetDTList(allDTList);
                     currentOrderTestList = getCurrentTestList(testObj, i);
                     // ImpactMain
+                    System.out.println("Checking all dependencies were found.");
                     nameToTestResults = getCurrentOrderTestListResults(currentOrderTestList, filesToDelete);
                     // Cross Referencer
                     changedTests = CrossReferencer.compareResults(nameToOrigResults, nameToTestResults, false);
+                    System.out.println("There were " + changedTests.size() + " changed tests.");
 
                     dtToFix.clear();
                     for (String test : changedTests) {
@@ -142,6 +153,7 @@ public class OneConfigurationRunner extends Runner {
 
             // capture end time
             double runTotal = System.nanoTime() - start;
+            System.out.println("Total running time: " + runTotal);
             testList.setNullifyDTTime(runTotal);
             testList.setNumNotFixedDT(changedTests);
             testList.setNumFixedDT(fixedDT.size());
@@ -164,5 +176,11 @@ public class OneConfigurationRunner extends Runner {
         }
 
         output(false);
+
+
+        FileTools.printStringToFile(paraObj.getKnownDependencies().values().stream()
+            .flatMap(Set::stream)
+            .map(TestData::toString)
+            .collect(Collectors.joining("\n")), new File(outputFileName + "-temp"), false);
     }
 }

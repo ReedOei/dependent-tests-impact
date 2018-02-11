@@ -28,38 +28,38 @@ import java.util.stream.Stream;
 
 /**
  * Usages: Get ALL_DT_LIST for just one test:
- * 
+ *
  * <pre>
  * {
  * 	&#064;code
  * 	ParallelDependentTestFinder dtFinder = new ParallelDependentTestFinder(dependentTestName, origOrder, newOrder,
  * 			filesToDelete);
- * 
+ *
  * 	Map&lt;String, Set&lt;String&gt;&gt; knownDependencies = dtFinder.runDTF();
- * 
+ *
  * }
  * </pre>
- * 
+ *
  * Get known dependencies for multiple tests, using same orig/new/prime order:
- * 
+ *
  * <pre>
  * {@code
  * List<DependentTestFinder> dtFinders = new ArrayList<>();
- * 
+ *
  * For first test:
  * ParallelDependentTestFinder dtFinder = new ParallelDependentTestFinder(dependentTestName, origOrder, newOrder, filesToDelete);
- * 
+ *
  * Map<String, Set<String>> knownDependencies = dtFinder.runDTF();
- * 
+ *
  * For second, etc.:
  * ParallelDependentTestFinder dtFinder2 = dtFinder.createFinderFor(nextDependentTestName);
- * 
+ *
  * Map<String, Set<String>> knownDependencies2 = dtFinder.runDTF();
- * 
+ *
  * // merge known dependencies into one map if desired.
- * 
+ *
  * }
- * 
+ *
  * </pre>
  */
 public class ParallelDependentTestFinder {
@@ -75,7 +75,7 @@ public class ParallelDependentTestFinder {
 		public TestOrder(final List<String> testOrder) {
 			this.testOrder = testOrder;
 
-			results = runTestOrder(testOrder, id).getNameToResultsMap();
+			results = runTestOrder(testOrder).getNameToResultsMap();
 		}
 
 		public RESULT getResult(final String testName) {
@@ -87,12 +87,9 @@ public class ParallelDependentTestFinder {
 		}
 	}
 
-	private static TestExecResult runTestOrder(final List<String> order,
-                                               final String id) {
-		return new FixedOrderRunner(order, id).run().getExecutionRecords().get(0);
+	private TestExecResult runTestOrder(final List<String> order) {
+		return new FixedOrderRunner(order, Integer.toString(threadNum)).run().getExecutionRecords().get(0);
 	}
-
-	private final String id = UUID.randomUUID().toString();
 
 	private final String dependentTestName;
 	private final RESULT dependentTestResult;
@@ -104,13 +101,15 @@ public class ParallelDependentTestFinder {
 
 	private final Map<String, Set<TestData>> knownDependencies;
 
+	private final int threadNum;
+
 	public ParallelDependentTestFinder(final String dependentTestName, final List<String> originalOrder,
-			final List<String> newOrder, final List<String> filesToDelete,
-			final Map<String, Set<TestData>> knownDependencies) {
+                                       Map<String, RESULT> nameToOrigResultsListHen, final List<String> newOrder, Map<String, RESULT> nameToNewResults, final List<String> filesToDelete,
+                                       final Map<String, Set<TestData>> knownDependencies, int threadNum) {
 		this.dependentTestName = dependentTestName;
 
-		this.originalOrder = new TestOrder(originalOrder);
-		this.newOrder = new TestOrder(newOrder);
+		this.originalOrder = new TestOrder(originalOrder, nameToOrigResultsListHen);
+		this.newOrder = new TestOrder(newOrder, nameToNewResults);
 
 		primeOrder = new TestOrder(generatePrimeOrder(this.originalOrder, this.newOrder));
 
@@ -118,6 +117,8 @@ public class ParallelDependentTestFinder {
 		this.knownDependencies = knownDependencies;
 
 		dependentTestResult = this.originalOrder.getResult(dependentTestName);
+
+		this.threadNum = threadNum;
 	}
 
 	public ParallelDependentTestFinder(final String dependentTestName, final List<String> originalOrder,
@@ -135,7 +136,8 @@ public class ParallelDependentTestFinder {
 		this.knownDependencies = knownDependencies;
 
 		dependentTestResult = this.originalOrder.getResult(dependentTestName);
-	}
+        threadNum = 0;
+    }
 
 	private ParallelDependentTestFinder(final String dependentTestName, final TestOrder originalOrder,
 			final TestOrder newOrder, final TestOrder primeOrder, final List<String> filesToDelete,
@@ -150,16 +152,17 @@ public class ParallelDependentTestFinder {
 		dependentTestResult = this.originalOrder.results.get(dependentTestName);
 
 		this.knownDependencies = knownDependencies;
-	}
+        threadNum = 0;
+    }
 
 	/**
 	 * Use this to create a new dependent test finder when reusing the same
 	 * orig/new/prime orders. Normally, the DependentTestFinder will run each
 	 * order when created to get results, using this method makes that
 	 * unnecessary (could save a lot of time).
-	 * 
+	 *
 	 * Also copies filesToDelete.
-	 * 
+	 *
 	 * @param dependentTestName
 	 *            The dependent test that this finder should be trying to find
 	 *            dependencies for.
@@ -194,7 +197,7 @@ public class ParallelDependentTestFinder {
 	/**
 	 * Generates a test order containing all the tests in order, with the
 	 * dependent test coming at the end, respecting all dependencies.
-	 * 
+	 *
 	 * @param order
 	 *            The order of tests to run before the dependent test. Not
 	 *            modified.
@@ -210,13 +213,13 @@ public class ParallelDependentTestFinder {
 
         knownDependencies.forEach((key, dependencies) -> dependencies.forEach(dependency -> dependency.fixOrder(newOrder)));
 
-        return runTestOrder(newOrder, id);
+        return runTestOrder(newOrder);
     }
 
 	/**
 	 * Adds a dependency to the known dependencies for the current dependent
 	 * test.
-	 * 
+	 *
 	 * @param dependency
 	 *            The new dependency
 	 * @param result
@@ -261,7 +264,6 @@ public class ParallelDependentTestFinder {
 	// returns true if dependentTestName's result in orderedTest
 	// does not match DEPENDENT_TEST_RESULT, false otherwise
 	private boolean isTestResultDifferent(List<String> orderedTests) {
-		FileTools.clearEnv(filesToDelete);
 		TestExecResult result = makeAndRunTestOrder(orderedTests);
 
 		RESULT dtIsolateResult = null;
@@ -294,11 +296,16 @@ public class ParallelDependentTestFinder {
 	/**
 	 * Finds all the dependencies for the test that this class was initialized
 	 * with.
-	 * 
+	 *
 	 * @return The new map of dependencies. (i.e., the test still has a
 	 *         different result than it did in the original order).
 	 */
 	public Map<String, Set<TestData>> runDTF() throws DependencyVerificationException {
+	    final int initialKnownDependencies =
+                knownDependencies.getOrDefault(dependentTestName, new HashSet<>()).size();
+
+	    System.out.println("Running dependent test finder for: " + dependentTestName + " (" + initialKnownDependencies + " known dependencies already).");
+
 		// If the dt is already in the knownDependencies list, we must have
 		// tried the below method
 		// to find dependencies and not found all of them.
@@ -313,7 +320,7 @@ public class ParallelDependentTestFinder {
 						newOrder.getResult(dependentTestName), newOrder.testOrder);
 			} else {
 				// Run the test in isolation
-				final Map<String, RESULT> results = runTestOrder(Collections.singletonList(dependentTestName), id)
+				final Map<String, RESULT> results = runTestOrder(Collections.singletonList(dependentTestName))
 						.getNameToResultsMap();
 
 				// If the result is the same with no tests before it, then we
@@ -339,6 +346,11 @@ public class ParallelDependentTestFinder {
 			}
 		}
 
+		// If we didn't get anymore information, give up, because we won't figure it out.
+		if (initialKnownDependencies >= knownDependencies.getOrDefault(dependentTestName, new HashSet<>()).size()) {
+		    throw new DependencyVerificationException("Could not find dependencies for " + dependentTestName);
+        }
+
 		if (isTestResultDifferent(newOrder.testOrder)) {
 			return runDTF();
 		} else {
@@ -352,7 +364,7 @@ public class ParallelDependentTestFinder {
 	 * dependencies. This is useful because we can determine which lists of
 	 * tests to perform delta debugging on, given that we did not find all
 	 * possible dependent tests the first time.
-	 * 
+	 *
 	 * Ex. A, B are before dependencies of C. The test order is F, A, K, J, B,
 	 * L, C. The dependency chains are: [F], [K,J], [L]
 	 */
@@ -407,10 +419,10 @@ public class ParallelDependentTestFinder {
 	 * subsequences of them, merging chains together to form single test lists.
 	 * Generates all single element chains first (so if there are no cross-chain
 	 * dependencies, we don't waste much extra time).
-	 * 
+	 *
 	 * Returns a stream so that we don't have to generate them all at once (lazy
 	 * evaluation).
-	 * 
+	 *
 	 * Ex. Take [1,2,3] and generate [1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]
 	 */
 	public Stream<List<String>> getAllDependencyChains(final List<List<String>> dependencyChains) {
@@ -452,6 +464,8 @@ public class ParallelDependentTestFinder {
 
 	private void dependentTestSolver(List<String> tests, boolean isOriginalOrder, List<String> addOnTests,
 			RESULT revealed, List<String> revealingOrder) {
+	    System.out.println("Running dependent test solver with " + tests.size() + " tests, and " + addOnTests.size() + " add on tests.");
+
 		tests.removeAll(addOnTests);
 		List<String> topHalf = new LinkedList<>(tests.subList(0, tests.size() / 2));
 		List<String> botHalf = new LinkedList<>(tests.subList(tests.size() / 2, tests.size()));
@@ -463,18 +477,18 @@ public class ParallelDependentTestFinder {
 			botHalf.addAll(addOnTests);
 			botHalf.add(dependentTestName);
 
-			FileTools.clearEnv(filesToDelete);
 			final TestExecResult topResults = makeAndRunTestOrder(topHalf);
-			boolean topResultsMatch = checkTestMatch(isOriginalOrder, topResults);
+			boolean topContainsDependency = checkTestMatch(isOriginalOrder, topResults);
 
-			FileTools.clearEnv(filesToDelete);
 			final TestExecResult botResults = makeAndRunTestOrder(botHalf);
-			boolean botResultsMatch = checkTestMatch(isOriginalOrder, botResults);
+			boolean botContainsDependency = checkTestMatch(isOriginalOrder, botResults);
 
 			// dependent test depends on more than one test in tests
-			if (topResultsMatch == botResultsMatch) {
+			if (topContainsDependency && botContainsDependency) {
 				List<String> newTopList = new ArrayList<>(tests.subList(0, tests.size() / 2));
 				List<String> newBotList = new ArrayList<>(tests.subList(tests.size() / 2, tests.size()));
+
+				System.out.println("Dependencies in both halves, solving top half first (" + newTopList.size() + " tests).");
 
 				// First, find the dependent tests in the top half.
 				// We can skip finding exactly which tests are the dependent
@@ -482,6 +496,8 @@ public class ParallelDependentTestFinder {
 				// for now by simply running all of them.
 				dependentTestSolver(newTopList, isOriginalOrder, newBotList,
 						topResults.getResult(dependentTestName).result, topHalf);
+
+				System.out.println("Dependencies in both halves, solving bottom half (" + newBotList.size() + " tests).");
 
 				// Now that we know the dependent tests in the top half, those
 				// dependencies should
@@ -500,7 +516,16 @@ public class ParallelDependentTestFinder {
 				}
 
 				return;
-			}
+			} else if (!topContainsDependency && !botContainsDependency) {
+			    // If we're here, that means that both the top half and the bottom half match.
+                // In that case, it must be that there is a dependency in the top and in the bottom
+                // half, and they BOTH must come together to cause the problem we're seeing.
+
+                System.out.println("Dependencies in both halves, solving sequentially.");
+
+                dependentTestSolveSequential(tests, isOriginalOrder, addOnTests, revealed, revealingOrder);
+                return;
+            }
 
 			// If only one half contains dependent tests, ignore all tests not
 			// in that half.
@@ -508,11 +533,13 @@ public class ParallelDependentTestFinder {
 			// then we want the top half.
 			// If the top results don't match, and we're looking for the after
 			// tests, we still want the top half.
-			if (topResultsMatch) {
+			if (topContainsDependency) {
+			    System.out.print("Halving, dependency is in top half (");
 				tests = topHalf;
 				revealed = topResults.getResult(dependentTestName).result;
 				revealingOrder = topHalf;
 			} else {
+                System.out.print("Halving, dependency is in bottom half (");
 				tests = botHalf;
 				revealed = botResults.getResult(dependentTestName).result;
 				revealingOrder = botHalf;
@@ -521,24 +548,62 @@ public class ParallelDependentTestFinder {
 			tests.removeAll(addOnTests);
 			tests.remove(tests.size() - 1);
 
+			System.out.println(tests.size() + " tests left).");
+
 			topHalf = new LinkedList<>(tests.subList(0, tests.size() / 2));
 			botHalf = new LinkedList<>(tests.subList(tests.size() / 2, tests.size()));
 		}
 
 		if (!tests.isEmpty()) {
 			// Verify this is a dependency
-
-			final boolean isDifferentWithout = isTestResultDifferent(Collections.singletonList(dependentTestName));
-			final boolean isDifferentWith = isTestResultDifferent(Arrays.asList(tests.get(0), dependentTestName));
-
-			if (isDifferentWith != isDifferentWithout) {
-				if (isOriginalOrder) {
-					addDependency(tests.get(0), revealed, revealingOrder, true);
-				} else {
-					addDependency(tests.get(0), revealed, revealingOrder, false);
-				}
-			}
+            verifyAndAddDependency(tests.get(0), isOriginalOrder, revealingOrder, revealed);
 		}
-
 	}
+
+	private void verifyAndAddDependency(final String testName,
+                                        final boolean isOriginalOrder,
+                                        final List<String> revealingOrder,
+                                        final RESULT revealed) {
+        final boolean isDifferentWithout = isTestResultDifferent(Collections.singletonList(dependentTestName));
+        final boolean isDifferentWith = isTestResultDifferent(Arrays.asList(testName, dependentTestName));
+
+        if (isDifferentWith != isDifferentWithout) {
+            System.out.println("Found dependency (" + (isOriginalOrder ? "before" : "after") + " dependency): " + testName);
+            addDependency(testName, revealed, revealingOrder, isOriginalOrder);
+        }
+    }
+
+    private void dependentTestSolveSequential(List<String> tests,
+                                              boolean isOriginalOrder,
+                                              List<String> addOnTests,
+                                              RESULT revealed,
+                                              List<String> revealingOrder) {
+	    final List<String> foundDependencies = new ArrayList<>();
+
+	    // Try removing tests one at a time to see if they affect the result.
+        while (tests.size() > 0) {
+            final String testName = tests.remove(0);
+
+            final List<String> orderedTests = new ArrayList<>(tests);
+
+            orderedTests.addAll(addOnTests);
+            orderedTests.addAll(0, foundDependencies);
+            orderedTests.add(dependentTestName);
+
+            final TestExecResult result = makeAndRunTestOrder(orderedTests);
+            final boolean containsDependency = checkTestMatch(isOriginalOrder, result);
+
+            if (!containsDependency) {
+                System.out.println("Solving sequentially (" + tests.size() + " tests left). Found: " + testName);
+
+                foundDependencies.add(testName);
+            } else {
+                System.out.println("Solving sequentially (" + tests.size() + " tests left).");
+            }
+        }
+
+        for (final String dependency : foundDependencies) {
+            addDependency(dependency, revealed, revealingOrder, isOriginalOrder);
+        }
+    }
 }

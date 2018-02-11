@@ -68,7 +68,7 @@ public class ParaThreads {
 	ConcurrentLinkedQueue<String> classpaths = new ConcurrentLinkedQueue<String>();
 	ConcurrentHashMap<String, Set<TestData>> knownDepMap = new ConcurrentHashMap<>();
 
-	// constructor sets number of threads
+    // constructor sets number of threads
 	public ParaThreads(int threads) {
 		this.threads = threads;
 	}
@@ -96,16 +96,16 @@ public class ParaThreads {
 
                 if (beforeString.equals("[]")) {
                     result.add("Test: " + afterString.replace("[", "").replace("]", ""));
-                    result.add("Intended behavior: " + RESULT.FAILURE);
+                    result.add("Intended behavior: " + td.intended);
                     result.add("when executed after: [" + td.dependentTest + "]");
-                    result.add("The revealed different behavior: " + RESULT.PASS);
+                    result.add("The revealed different behavior: " + td.revealed);
                     result.add("when executed after: []");
                 } else {
                     result.add("Test: " + td.dependentTest);
-                    result.add("Intended behavior: " + RESULT.FAILURE);
+                    result.add("Intended behavior: " + td.intended);
                     result.add("when executed after: " + beforeString);
-                    result.add("The revealed different behavior: " + RESULT.PASS);
-                    result.add("when executed after: []");
+                    result.add("The revealed different behavior: " + td.revealed);
+                    result.add("when executed after: " + td.revealingOrder);
                 }
             }
         }
@@ -117,17 +117,18 @@ public class ParaThreads {
 	public List<String> runThreads() {
 		// add dependent tests to q
 		for (String i : changedTests) {
-			System.out.printf("\nThe test added is: %s\n", i);
+			System.out.printf("The test added is: %s\n", i);
 			q.add(i);
 		}
 
 		// create new threads as specified
 		for (int j = 0; j < threads; j++) {
+			final int threadNum = j;
 			threadList.add(new Thread(new Runnable() {
 				// each thread's run method defined here
 				public void run() {
 					try {
-						System.out.printf("\nthread is running!\n");
+					    System.out.println("Thread " + threadNum + " is running!");
 
 						Map<String, Set<TestData>> knownDependencies = new HashMap<>();
 						ParallelDependentTestFinder dtFinder = null;
@@ -139,7 +140,7 @@ public class ParaThreads {
 								dtFinder = new ParallelDependentTestFinder(test,
                                         origOrderTestListHen, nameToOrigResultsListHen,
 										currentOrderTestListHen, nameToNewResults,
-                                        filesToDeleteHen, knownDepMap);
+                                        filesToDeleteHen, knownDepMap, threadNum);
 								knownDependencies = dtFinder.runDTF();
 							} else {
 								dtFinder = dtFinder.createFinderFor(test);
@@ -178,4 +179,8 @@ public class ParaThreads {
 		classpaths.clear();
 		return allDTSynchListReturn;
 	}
+
+    public Map<String, Set<TestData>> getKnownDependencies() {
+        return knownDepMap;
+    }
 }
