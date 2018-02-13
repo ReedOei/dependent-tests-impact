@@ -178,18 +178,26 @@ do
                 mv "$DT_SCRIPTS/${SUBJ_NAME}-results" "$DT_SCRIPTS/${SUBJ_NAME}-old-results"
             fi
 
+            # Make sure compile-output exists
+            mkdir -p "$DT_SCRIPTS/compile-output"
+
             mkdir "$DT_SCRIPTS/${SUBJ_NAME}-results"
             cd $DT_SCRIPTS
-            bash run-subj.sh |& grep --line-buffered -v "Test being executed" |& tee "$DT_SCRIPTS/${SUBJ_NAME}-results/output.txt"
+
+            bash run-subj.sh |& tee "$DT_SCRIPTS/${SUBJ_NAME}-results/output.txt" | grep --line-buffered -v "Test being executed"
 
             if [[ $? -eq 1 ]]; then
-                echo "[INFO] Build failed. Continuing."
+                echo "[INFO] Script failed. Continuing."
                 break
             fi
 
             echo
             echo "[INFO] Finished, copying results to ${SUBJ_NAME}-results"
             mv figure* "$DT_SCRIPTS/${SUBJ_NAME}-results"
+            cp -r "$DT_ROOT/prioritization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+            cp -r "$DT_ROOT/selection-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+            cp -r "$DT_ROOT/parallelization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+
             break
         fi
     done
