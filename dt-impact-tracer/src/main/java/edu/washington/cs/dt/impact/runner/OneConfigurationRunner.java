@@ -142,6 +142,11 @@ public class OneConfigurationRunner extends Runner {
                     changedTests = CrossReferencer.compareResults(nameToOrigResults, nameToTestResults, false);
                     System.out.println("There were " + changedTests.size() + " changed tests.");
 
+                    System.out.println(paraObj.getKnownDependencies().values().stream()
+                            .flatMap(Set::stream)
+                            .map(TestData::toString)
+                            .collect(Collectors.joining("\n\n")));
+
                     dtToFix.clear();
                     for (String test : changedTests) {
                         if (currentOrderTestList.contains(test)) {
@@ -153,7 +158,7 @@ public class OneConfigurationRunner extends Runner {
 
             // capture end time
             double runTotal = System.nanoTime() - start;
-            System.out.println("Total running time: " + runTotal);
+            System.out.println("Total running time: " + runTotal / 1000000000);
             testList.setNullifyDTTime(runTotal);
             testList.setNumNotFixedDT(changedTests);
             testList.setNumFixedDT(fixedDT.size());
@@ -181,6 +186,6 @@ public class OneConfigurationRunner extends Runner {
         FileTools.printStringToFile(paraObj.getKnownDependencies().values().stream()
             .flatMap(Set::stream)
             .map(TestData::toString)
-            .collect(Collectors.joining("\n")), new File(outputFileName + "-temp"), false);
+            .collect(Collectors.joining("\n\n")), new File(outputFileName + "-temp"), false);
     }
 }

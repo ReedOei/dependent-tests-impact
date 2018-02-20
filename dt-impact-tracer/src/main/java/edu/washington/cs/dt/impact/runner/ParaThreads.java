@@ -50,23 +50,23 @@ import javax.print.DocFlavor;
 
 public class ParaThreads {
 	// list of variables
-	static Set<String> changedTests;
-	static Map<String, RESULT> nameToOrigResultsListHen;
-	static List<String> currentOrderTestListHen;
-	static List<String> origOrderTestListHen;
-	static List<String> filesToDeleteHen;
-	static List<String> allDTListHen;
+	private static Set<String> changedTests;
+	private static Map<String, RESULT> nameToOrigResultsListHen;
+	private static List<String> currentOrderTestListHen;
+	private static List<String> origOrderTestListHen;
+	private static List<String> filesToDeleteHen;
+	private static List<String> allDTListHen;
     private static Map<String, RESULT> nameToNewResults;
-    ArrayList<Thread> threadList = new ArrayList<Thread>(); // arraylist of
+    private ArrayList<Thread> threadList = new ArrayList<Thread>(); // arraylist of
 															// threads
 	int threads; // number of threads to use
 	// q (below) is a shared queue between threads, each thread pops a test off
 	// of the queue and calls runDTF on it
-	ConcurrentLinkedQueue<String> q = new ConcurrentLinkedQueue<String>();
+    private ConcurrentLinkedQueue<String> q = new ConcurrentLinkedQueue<String>();
 	// classpaths (below) is a queue of the thread number (as a string) to
 	// append to tmp files generated
-	ConcurrentLinkedQueue<String> classpaths = new ConcurrentLinkedQueue<String>();
-	ConcurrentHashMap<String, Set<TestData>> knownDepMap = new ConcurrentHashMap<>();
+    private ConcurrentLinkedQueue<String> classpaths = new ConcurrentLinkedQueue<String>();
+	private ConcurrentHashMap<String, Set<TestData>> knownDepMap = new ConcurrentHashMap<>();
 
     // constructor sets number of threads
 	public ParaThreads(int threads) {
@@ -105,7 +105,7 @@ public class ParaThreads {
                     result.add("Intended behavior: " + td.intended);
                     result.add("when executed after: " + beforeString);
                     result.add("The revealed different behavior: " + td.revealed);
-                    result.add("when executed after: " + td.revealingOrder);
+                    result.add("when executed after: []");
                 }
             }
         }
@@ -130,7 +130,6 @@ public class ParaThreads {
 					try {
 					    System.out.println("Thread " + threadNum + " is running!");
 
-						Map<String, Set<TestData>> knownDependencies = new HashMap<>();
 						ParallelDependentTestFinder dtFinder = null;
 
 						while (q.peek() != null) {
@@ -141,24 +140,16 @@ public class ParaThreads {
                                         origOrderTestListHen, nameToOrigResultsListHen,
 										currentOrderTestListHen, nameToNewResults,
                                         filesToDeleteHen, knownDepMap, threadNum);
-								knownDependencies = dtFinder.runDTF();
+								dtFinder.runDTF();
 							} else {
 								dtFinder = dtFinder.createFinderFor(test);
-								knownDependencies = dtFinder.runDTF();
+								dtFinder.runDTF();
 							}
 						}
 
-						knownDependencies.forEach((testName, dependencies) ->
-							knownDepMap.merge(testName, dependencies, (dep1, dep2) -> {
-								dep2.addAll(dep1);
-								return dep2;
-							}));
-
-                        System.out.println(generateDTList(knownDependencies));
-
-						System.out.printf("\nthread is done!\n");
+						System.out.println("Thread " + threadNum + " is done!");
 					} catch (Exception e) {
-						System.out.println("\nEncountered an error: " + e + "\n");
+						System.out.println("Encountered an error: " + e);
 					}
 				}
 			}));
@@ -169,15 +160,13 @@ public class ParaThreads {
 		for (Thread t : threadList) {
 			try {
 				t.join();
-			} catch (Exception a) {
-			}
+			} catch (Exception ignored) {}
 		}
 		threadList.clear(); // clear list since threads cannot be restarted once
 							// stopped
 		// need deep copy of allDTSynchList since rejoining to main thread
-		List<String> allDTSynchListReturn = generateDTList(knownDepMap);
 		classpaths.clear();
-		return allDTSynchListReturn;
+		return generateDTList(knownDepMap);
 	}
 
     public Map<String, Set<TestData>> getKnownDependencies() {

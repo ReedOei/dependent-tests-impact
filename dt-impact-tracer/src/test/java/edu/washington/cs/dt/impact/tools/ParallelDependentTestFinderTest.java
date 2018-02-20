@@ -54,7 +54,8 @@ public class ParallelDependentTestFinderTest {
                 Arrays.asList("B", "C", "dt", "A"),
                 newResults,
                 new ArrayList<>(),
-                knownDependencies);
+                knownDependencies,
+                0);
     }
 
     @Test
