@@ -131,7 +131,10 @@ public class OneConfigurationRunner extends Runner {
                     	dtfObj.runDTF(testName, nameToOrigResults.get(testName), currentOrderTestList, origOrderTestList, filesToDelete, allDTList);
                         allDTList=dtfObj.getAllDTs();
                     }
-                    
+
+                    System.out.println("All DT List:");
+                    System.out.println(allDTList);
+
                     // TestListGenerator
                     testObj.resetDTList(allDTList);
                     currentOrderTestList = getCurrentTestList(testObj, i);

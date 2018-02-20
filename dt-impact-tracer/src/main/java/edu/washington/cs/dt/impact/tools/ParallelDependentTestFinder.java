@@ -170,7 +170,11 @@ public class ParallelDependentTestFinder {
             // Make sure no tests appear twice.
             insertTests.removeIf(test -> primeOrder.indexOf(test) < primeIndex);
             primeOrder.removeIf(insertTests::contains); // Should only remove tests after the dt
-            primeOrder.addAll(primeIndex, insertTests);
+
+            // Get rid of all tests that come after the dependent test we're interested in
+            primeOrder.subList(primeIndex, primeOrder.size()).clear();
+            primeOrder.addAll(insertTests);
+            primeOrder.add(dependentTestName);
         }
 
 	    System.out.println("Making and running prime order (" + primeOrder.size() + " tests).");
@@ -362,7 +366,7 @@ public class ParallelDependentTestFinder {
 
         System.out.println("Checking if all dependencies were found for " + dependentTestName + ".");
 
-		if (isTestResultDifferent(newOrder.testOrder)) {
+		if (isTestResultDifferent(newOrder.getTestsBefore(dependentTestName))) {
 			return runDTF();
 		} else {
 			return knownDependencies;
@@ -387,22 +391,21 @@ public class ParallelDependentTestFinder {
                         .collect(Collectors.toList());
 
         // Add this so that we get all tests that come before other dependencies.
-        indices.add(0, -1);
+        indices.add(0, 0);
 
         final List<List<String>> chains = new ArrayList<>();
 
         for (int i = 0; i < indices.size(); i++) {
             int lo = indices.get(i);
 
-            // The last test should be the dependent test, so don't include it.
-            int hi = testOrder.size() - 1;
+            int hi = testOrder.size();
 
             if (i + 1 < indices.size()) {
-                hi = indices.get(i + 1);
+                hi = indices.get(i + 1) + 1;
             }
 
             if (lo < hi) {
-                chains.add(new ArrayList<>(testOrder.subList(lo + 1, hi)));
+                chains.add(new ArrayList<>(testOrder.subList(lo, hi)));
             }
         }
 
@@ -478,7 +481,7 @@ public class ParallelDependentTestFinder {
                 // Check that we've found all the dependencies, and break out if we
                 // have.
                 if (!isTestResultDifferent(Collections.singletonList(dependentTestName))
-                        && !isTestResultDifferent(newOrder.testOrder)) {
+                        && !isTestResultDifferent(newOrder.getTestsBefore(dependentTestName))) {
                     return;
                 }
             }
@@ -531,23 +534,14 @@ public class ParallelDependentTestFinder {
 				dependentTestSolver(newTopList, isOriginalOrder, topAddOnTests, botAddOnTests,
 						topResults.getResult(dependentTestName).result, topHalf);
 
-
-				// Now that we know the dependent tests in the top half, those
-				// dependencies should be handled by the knownDependencies variable.
-
-                // We want to know if there is still a dependency in the bottom half, or we've already
-                // found everything that is necessary.
-				final List<String> orderedTests = new ArrayList<>(newBotList);
-				orderedTests.add(dependentTestName);
-
-				final TestExecResult result = runTestOrder(orderedTests);
-
-				if (containsDependency(isOriginalOrder, result)) {
+                // If it's still different, given what we know, then we must continue.
+                if (isTestResultDifferent(Collections.singletonList(dependentTestName)) ||
+                        isTestResultDifferent(botHalf)) {
                     System.out.println("Dependencies in both halves, solving bottom half (" + newBotList.size() + " tests).");
-					dependentTestSolver(newBotList, isOriginalOrder, topAddOnTests, botAddOnTests,
-							botResults.getResult(dependentTestName).result, botHalf);
-				} else {
-				    System.out.println("No need to solve bottom half, we already found all necessary dependencies.");
+                    dependentTestSolver(newBotList, isOriginalOrder, topAddOnTests, botAddOnTests,
+                            botResults.getResult(dependentTestName).result, botHalf);
+                } else {
+                    System.out.println("No need to solve bottom half, we already found all necessary dependencies.");
                 }
 
 				return;
@@ -583,9 +577,9 @@ public class ParallelDependentTestFinder {
                 orderedTests.addAll(botAddOnTests);
                 orderedTests.add(dependentTestName);
 
-                final TestExecResult result = makeAndRunTestOrder(orderedTests);
-
-                if (containsDependency(isOriginalOrder, result)) {
+                // If it's still different, given what we know, then we must continue.
+                if (isTestResultDifferent(Collections.singletonList(dependentTestName)) ||
+                        isTestResultDifferent(botHalf)) {
                     System.out.println("Dependencies in both halves, solving bottom half (" + newBotList.size() + " tests).");
                     dependentTestSolver(newBotList, isOriginalOrder, newTopAddOnTests, botAddOnTests,
                             botResults.getResult(dependentTestName).result, botHalf);
@@ -641,7 +635,7 @@ public class ParallelDependentTestFinder {
 
         final boolean isDifferentWithout = isTestResultDifferent(orderedTests);
 
-        orderedTests.add(topAddOnTests.size(), testName);
+        orderedTests.add(topAddOnTests.size(), testName); // Add right before the botAddOnTests.
         final boolean isDifferentWith = isTestResultDifferent(orderedTests);
 
         if (isDifferentWith != isDifferentWithout) {
