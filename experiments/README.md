@@ -2,6 +2,10 @@ ambari                  - 96aaf1d
 
 ambari-new              - f4a3dbc
 
+activemq-old            - abfe038ddfd6d6c4f7c41e106dabc815041b04c5
+
+activemq-new            - 321ddd71aecfa81390ae221be84845397b78640f
+
 crystal                 - trunk-2013-12-12
 
 crystalvc               - version 1.0.20111015
