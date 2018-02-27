@@ -123,7 +123,7 @@ public class OneConfigurationRunner extends Runner {
                     if(threads >= 1)
                     {
                     	paraObj.setParaVars(changedTests, nameToOrigResults, nameToTestResults, currentOrderTestList, origOrderTestList, filesToDelete, allDTList);
-                        allDTList = paraObj.runThreads();
+                        allDTList = paraObj.runThreads(i, testObj);
                     }
                     //if not specified, use default DependentTestFinder 
                     else
@@ -132,8 +132,8 @@ public class OneConfigurationRunner extends Runner {
                         allDTList=dtfObj.getAllDTs();
                     }
 
-                    System.out.println("All DT List:");
-                    System.out.println(allDTList);
+//                    System.out.println("All DT List:");
+//                    System.out.println(allDTList);
 
                     // TestListGenerator
                     testObj.resetDTList(allDTList);
@@ -145,10 +145,10 @@ public class OneConfigurationRunner extends Runner {
                     changedTests = CrossReferencer.compareResults(nameToOrigResults, nameToTestResults, false);
                     System.out.println("There were " + changedTests.size() + " changed tests.");
 
-                    System.out.println(paraObj.getKnownDependencies().values().stream()
-                            .flatMap(Set::stream)
-                            .map(TestData::toString)
-                            .collect(Collectors.joining("\n\n")));
+//                    System.out.println(paraObj.getKnownDependencies().values().stream()
+//                            .flatMap(Set::stream)
+//                            .map(TestData::toString)
+//                            .collect(Collectors.joining("\n\n")));
 
                     dtToFix.clear();
                     for (String test : changedTests) {

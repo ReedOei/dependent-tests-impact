@@ -89,6 +89,70 @@ public class TestData {
         return new TestData(dependentTest, intended, beforeTests, afterTests, revealed, revealingOrder);
     }
 
+    private static <T> List<T> unique(final List<T> order) {
+        return order.stream().distinct().collect(Collectors.toList());
+    }
+
+    private static void handleDeps(final Map<String, Set<TestData>> knownDependencies,
+                                   final List<String> order,
+                                   final String test) {
+        if (!order.contains(test)) {
+            if (knownDependencies.containsKey(test)) {
+                final Set<TestData> dependencies = knownDependencies.get(test);
+
+                for (final TestData td : dependencies) {
+                    for (final String beforeTest : td.beforeTests) {
+                        handleDeps(knownDependencies, order, beforeTest);
+                    }
+                }
+            }
+
+            order.add(test);
+        }
+    }
+
+    public static List<String> fixOrder(final Map<String, Set<TestData>> knownDependencies,
+                                        final List<String> order) {
+        final List<String> newOrder = new ArrayList<>();
+
+        for (final String test : order) {
+            handleDeps(knownDependencies, newOrder, test);
+        }
+
+        knownDependencies.forEach((key, dependencies) -> dependencies.forEach(dependency -> dependency.fixOrder(newOrder)));
+
+        return unique(newOrder);
+    }
+
+    public static List<String> generateDTList(final Map<String, Set<TestData>> knownDependencies) {
+        final List<String> result = new ArrayList<>();
+
+        for (Map.Entry<String, Set<TestData>> entry : knownDependencies.entrySet()) {
+            Set<TestData> testdataset = entry.getValue();
+
+            for (TestData td : testdataset) {
+                String beforeString = td.beforeTests.toString();
+                String afterString = td.afterTests.toString();
+
+                if (beforeString.equals("[]")) {
+                    result.add("Test: " + afterString.replace("[", "").replace("]", ""));
+                    result.add("Intended behavior: " + td.intended);
+                    result.add("when executed after: [" + td.dependentTest + "]");
+                    result.add("The revealed different behavior: " + td.revealed);
+                    result.add("when executed after: []");
+                } else {
+                    result.add("Test: " + td.dependentTest);
+                    result.add("Intended behavior: " + td.intended);
+                    result.add("when executed after: " + beforeString);
+                    result.add("The revealed different behavior: " + td.revealed);
+                    result.add("when executed after: []");
+                }
+            }
+        }
+
+        return result;
+    }
+
     @Override
     public String toString() {
         return  "Test: " + dependentTest + "\n" +

@@ -1,31 +1,15 @@
 package edu.washington.cs.dt.impact.runner;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 import edu.washington.cs.dt.RESULT;
-import edu.washington.cs.dt.impact.data.WrapperTestList;
-import edu.washington.cs.dt.impact.technique.Parallelization;
-import edu.washington.cs.dt.impact.technique.Prioritization;
-import edu.washington.cs.dt.impact.technique.Selection;
 import edu.washington.cs.dt.impact.technique.Test;
-import edu.washington.cs.dt.impact.tools.CrossReferencer;
-import edu.washington.cs.dt.impact.tools.DependentTestFinder;
-import edu.washington.cs.dt.impact.util.Constants.TECHNIQUE;
 import edu.washington.cs.dt.impact.tools.ParallelDependentTestFinder;
 import edu.washington.cs.dt.impact.data.TestData;
-
-import javax.print.DocFlavor;
 
 /*
  * TODO 
@@ -85,36 +69,8 @@ public class ParaThreads {
 		ParaThreads.allDTListHen = allDTListHen;
 	}
 
-	private List<String> generateDTList(final Map<String, Set<TestData>> knownDependencies) {
-	    final List<String> result = new ArrayList<>();
-
-        for (Map.Entry<String, Set<TestData>> entry : knownDependencies.entrySet()) {
-            Set<TestData> testdataset = entry.getValue();
-            for (TestData td : testdataset) {
-                String beforeString = td.beforeTests.toString();
-                String afterString = td.afterTests.toString();
-
-                if (beforeString.equals("[]")) {
-                    result.add("Test: " + afterString.replace("[", "").replace("]", ""));
-                    result.add("Intended behavior: " + td.intended);
-                    result.add("when executed after: [" + td.dependentTest + "]");
-                    result.add("The revealed different behavior: " + td.revealed);
-                    result.add("when executed after: []");
-                } else {
-                    result.add("Test: " + td.dependentTest);
-                    result.add("Intended behavior: " + td.intended);
-                    result.add("when executed after: " + beforeString);
-                    result.add("The revealed different behavior: " + td.revealed);
-                    result.add("when executed after: []");
-                }
-            }
-        }
-
-        return result;
-    }
-
 	// runs threads and returns a list of strings that represent allDTList
-	public List<String> runThreads() {
+	public List<String> runThreads(int machine, Test testObj) {
 		// add dependent tests to q
 		for (String i : changedTests) {
 			System.out.printf("The test added is: %s\n", i);
@@ -166,7 +122,7 @@ public class ParaThreads {
 							// stopped
 		// need deep copy of allDTSynchList since rejoining to main thread
 		classpaths.clear();
-		return generateDTList(knownDepMap);
+		return TestData.generateDTList(knownDepMap);
 	}
 
     public Map<String, Set<TestData>> getKnownDependencies() {

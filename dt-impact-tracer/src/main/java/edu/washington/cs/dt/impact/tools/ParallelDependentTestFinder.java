@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -117,7 +118,26 @@ public class ParallelDependentTestFinder {
 		this.knownDependencies = knownDependencies;
 
 		dependentTestResult = this.originalOrder.getResult(dependentTestName);
-	}
+    }
+
+    public ParallelDependentTestFinder(final String dependentTestName, final List<String> originalOrder,
+                                       Map<String, RESULT> nameToOrigResultsListHen, final List<String> newOrder,
+                                       Map<String, RESULT> nameToNewResults, final List<String> primeOrder,
+                                       Map<String, RESULT> primeOrderResults, final List<String> filesToDelete,
+                                       final Map<String, Set<TestData>> knownDependencies, int threadNum) {
+        this.threadNum = threadNum;
+        this.dependentTestName = dependentTestName;
+
+        this.originalOrder = new TestOrder(originalOrder, nameToOrigResultsListHen);
+        this.newOrder = new TestOrder(newOrder, nameToNewResults);
+
+        this.primeOrder = new TestOrder(primeOrder, primeOrderResults);
+
+        this.filesToDelete = filesToDelete;
+        this.knownDependencies = knownDependencies;
+
+        dependentTestResult = this.originalOrder.getResult(dependentTestName);
+    }
 
 	private ParallelDependentTestFinder(final String dependentTestName, final TestOrder originalOrder,
 			final TestOrder newOrder, final List<String> filesToDelete,
@@ -192,18 +212,14 @@ public class ParallelDependentTestFinder {
 	 * @return The results from running the tests in that order.
 	 */
 	private TestExecResult makeAndRunTestOrder(final List<String> order) {
-		List<String> newOrder = new ArrayList<>(order);
-        int newIndex = newOrder.indexOf(dependentTestName);
+		List<String> temp = new ArrayList<>(order);
+        int newIndex = temp.indexOf(dependentTestName);
         if(newIndex == -1)
         {
-        	newOrder.add(dependentTestName);
+        	temp.add(dependentTestName);
         }
 
-        // Ensure the test list is unique.
-        final List<String> uniqueNewOrder = newOrder.stream().distinct().collect(Collectors.toList());
-        knownDependencies.forEach((key, dependencies) -> dependencies.forEach(dependency -> dependency.fixOrder(uniqueNewOrder)));
-
-        return runTestOrder(uniqueNewOrder);
+        return runTestOrder(TestData.fixOrder(knownDependencies, temp));
     }
 
 	/**
@@ -216,7 +232,7 @@ public class ParallelDependentTestFinder {
 	 *            The result of running the test without this dependency in it's
 	 *            proper location.
 	 */
-	private void addDependency(final String dependency,
+	 void addDependency(final String dependency,
                                final RESULT result,
                                final List<String> testOrder,
                                final boolean isBefore) {
@@ -435,6 +451,25 @@ public class ParallelDependentTestFinder {
 		return result;
 	}
 
+	private <T> Stream<List<T>> subsequences(final List<T> list) {
+	    if (list.isEmpty()) {
+	        return Stream.empty();
+        }
+
+        final T x = list.get(0);
+	    final List<T> xs = list.subList(1, list.size());
+
+        return Stream.concat(
+                Stream.of(Collections.singletonList(x)),
+                subsequences(xs)
+                    .reduce(Stream.empty(), (Stream<List<T>> r, List<T> ys) -> {
+                        List<T> temp = new ArrayList<>(ys);
+                        temp.add(0, x);
+
+                        return Stream.concat(Stream.concat(Stream.of(ys), Stream.of(temp)), r);
+                    }, Stream::concat));
+    }
+
 	/**
 	 * Takes each individual dependency chain, and generate all possible
 	 * subsequences of them, merging chains together to form single test lists.
@@ -446,20 +481,16 @@ public class ParallelDependentTestFinder {
 	 *
 	 * Ex. Take [1,2,3] and generate [1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]
 	 */
-	public Stream<List<String>> getAllDependencyChains(final List<List<String>> dependencyChains) {
-        return Stream.concat(
-                // Add all the single item subsequences.
-                dependencyChains.stream(),
+	public <T> Stream<List<T>> getAllDependencyChains(final List<List<T>> dependencyChains) {
+        final List<Integer> indices = IntStream.range(0, dependencyChains.size()).boxed().collect(Collectors.toList());
 
-                // Generate the rest of them.
-                tails(dependencyChains).stream()
-                .flatMap(chains ->
-                    getAllDependencyChains(chains.subList(1, chains.size())).map(chain -> {
-                        final List<String> newChain = new ArrayList<>(chains.get(0));
-                        newChain.addAll(chain);
-                        return newChain;
-                    }))
-        );
+        return subsequences(indices)
+                .map(is -> is.stream().map(dependencyChains::get)
+                            .reduce(Collections.emptyList(), (as, bs) -> {
+                                final List<T> t = new ArrayList<>(as);
+                                t.addAll(bs);
+                                return t;
+                            }));
     }
 
 	private void findDependencyInChains() throws DependencyVerificationException {

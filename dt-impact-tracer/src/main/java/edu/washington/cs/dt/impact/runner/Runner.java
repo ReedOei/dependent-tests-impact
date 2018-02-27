@@ -723,7 +723,7 @@ public abstract class Runner {
         return results.getExecutionRecords().get(0).getNameToResultsMap();
     }
 
-    protected static List<String> getCurrentTestList(Test testObj, int numOfMachines) {
+    public static List<String> getCurrentTestList(Test testObj, int numOfMachines) {
         // TestListGenerator
         List<String> currentOrderTestList = new LinkedList<String>();
         for (TestFunctionStatement tfs : testObj.getResults(numOfMachines)) {

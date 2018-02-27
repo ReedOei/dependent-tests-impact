@@ -4,16 +4,20 @@ import edu.washington.cs.dt.RESULT;
 import edu.washington.cs.dt.impact.data.TestData;
 import org.junit.Before;
 import org.junit.Test;
+import polyglot.util.TransformingList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -54,6 +58,8 @@ public class ParallelDependentTestFinderTest {
                 Arrays.asList("B", "C", "dt", "A"),
                 newResults,
                 new ArrayList<>(),
+                new HashMap<>(),
+                new ArrayList<>(),
                 knownDependencies,
                 0);
     }
@@ -64,10 +70,42 @@ public class ParallelDependentTestFinderTest {
         final List<List<String>> output = dtFinder.getDependencyChains(testOrder);
 
         final Set<List<String>> expected = new HashSet<>(Arrays.asList(
-                Collections.singletonList("F"),
-                Arrays.asList("K", "J", "B", "L")));
+                Arrays.asList("F", "A"),
+                Arrays.asList("A", "K", "J", "B", "L", "C"),
+                Arrays.asList("C", "dt")));
 
         assertTrue(output.containsAll(expected));
+    }
+
+    @Test
+    public void getChainsLarge() throws Exception {
+        final List<String> l =
+                IntStream.range(1, 10000000).boxed()
+                        .map(i -> Integer.toString(new Random().nextInt()))
+                        .collect(Collectors.toList());
+
+        dtFinder.addDependency("K", RESULT.FAILURE, new ArrayList<>(), false);
+        dtFinder.addDependency("L", RESULT.FAILURE, new ArrayList<>(), false);
+        dtFinder.addDependency("J", RESULT.FAILURE, new ArrayList<>(), false);
+        dtFinder.addDependency("M", RESULT.FAILURE, new ArrayList<>(), false);
+        dtFinder.addDependency("N", RESULT.FAILURE, new ArrayList<>(), false);
+        dtFinder.addDependency("O", RESULT.FAILURE, new ArrayList<>(), false);
+
+        for (final Set<TestData> dt : dtFinder.getKnownDependencies().values()) {
+            for (TestData td : dt) {
+                int randIndex = new Random().nextInt(l.size());
+
+                l.addAll(randIndex, td.afterTests);
+                l.addAll(randIndex, td.beforeTests);
+            }
+        }
+
+        int r = 0;
+        for (Iterator<List<String>> it = dtFinder.getAllDependencyChains(dtFinder.getDependencyChains(l)).iterator(); it.hasNext(); ) {
+            List<String> list = it.next();
+            r += list.size();
+        }
+        System.out.println(r);
     }
 
     @Test
