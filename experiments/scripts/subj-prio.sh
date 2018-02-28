@@ -23,10 +23,6 @@ else
 fi
 
 PRECOMPUTE_DEPENDENCES=$7
-PRECOMPUTE_FLAG=""
-if [ "$PRECOMPUTE_DEPENDENCES" = "true" ]; then
-  PRECOMPUTE_FLAG="-resolveDependences $DT_ROOT/$prioList/prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
-fi
 
 GEN_ENHANCED_RESULTS=$8
 
@@ -50,6 +46,11 @@ for k in "${testTypes[@]}"; do
 
   for i in "${coverages[@]}"; do
     for j in "${priorOrders[@]}"; do
+
+      PRECOMPUTE_FLAG=""
+      if [ "$PRECOMPUTE_DEPENDENCES" = "true" ]; then
+        PRECOMPUTE_FLAG="-resolveDependences $PRIO_DT_LISTS/prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
+      fi
 
       # Running prioritization with resolveDependences and without dependentTestFile
       echo "[DEBUG] java -cp $CLASSPATH edu.washington.cs.dt.impact.runner.OneConfigurationRunner \

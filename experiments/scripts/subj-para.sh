@@ -23,10 +23,6 @@ else
 fi
 
 PRECOMPUTE_DEPENDENCES=$7
-PRECOMPUTE_FLAG=""
-if [ "$PRECOMPUTE_DEPENDENCES" = "true" ]; then
-  PRECOMPUTE_FLAG="-resolveDependences $DT_ROOT/$prioList/prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
-fi
 
 GEN_ENHANCED_RESULTS=$8
 
@@ -49,6 +45,11 @@ for j in "${testTypes[@]}"; do
   fi
 
   for k in "${machines[@]}"; do
+
+    PRECOMPUTE_FLAG=""
+    if [ "$PRECOMPUTE_DEPENDENCES" = "true" ]; then
+      PRECOMPUTE_FLAG="-resolveDependences $PARA_DT_LISTS/parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt"
+    fi
 
     # [INFO] Running parallelization with resolveDependences and without dependentTestFile for original order
     echo "[DEBUG] java -cp $CLASSPATH edu.washington.cs.dt.impact.runner.OneConfigurationRunner \
@@ -101,6 +102,11 @@ for j in "${testTypes[@]}"; do
         -outputDir $DT_ROOT/$paraDir \
         -timesToRun $medianTimes \
         -dependentTestFile $PARA_DT_LISTS/"parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt"
+    fi
+
+    PRECOMPUTE_FLAG=""
+    if [ "$PRECOMPUTE_DEPENDENCES" = "true" ]; then
+      PRECOMPUTE_FLAG="-resolveDependences $PARA_DT_LISTS/parallelization-$SUBJ_NAME_FORMAL-$j-$k-time.txt"
     fi
 
     # [INFO] Running parallelization with resolveDependences and without dependentTestFile for time order
