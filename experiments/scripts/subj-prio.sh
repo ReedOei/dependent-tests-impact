@@ -92,7 +92,7 @@ for k in "${testTypes[@]}"; do
           -testType $k \
           -outputDir $DT_ROOT/$prioDir \
           -timesToRun $medianTimes \
-          -dependentTestFile $DT_ROOT/$prioList/\"prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt\""
+          -dependentTestFile $PRIO_DT_LISTS/\"prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt\""
         java -cp $CLASSPATH edu.washington.cs.dt.impact.runner.OneConfigurationRunner \
           -technique prioritization \
           -coverage $i \
@@ -105,7 +105,7 @@ for k in "${testTypes[@]}"; do
           -testType $k \
           -outputDir $DT_ROOT/$prioDir \
           -timesToRun $medianTimes \
-          -dependentTestFile $DT_ROOT/$prioList/"prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
+          -dependentTestFile $PRIO_DT_LISTS/"prioritization-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
       fi
     done
   done

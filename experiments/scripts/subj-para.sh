@@ -88,7 +88,7 @@ for j in "${testTypes[@]}"; do
         -numOfMachines $k \
         -outputDir $DT_ROOT/$paraDir \
         -timesToRun $medianTimes \
-        -dependentTestFile $DT_ROOT/$paraList/\"parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt\""
+        -dependentTestFile $PARA_DT_LISTS/\"parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt\""
       java -cp $CLASSPATH edu.washington.cs.dt.impact.runner.OneConfigurationRunner \
         -technique parallelization \
         -order original \
@@ -100,7 +100,7 @@ for j in "${testTypes[@]}"; do
         -numOfMachines $k \
         -outputDir $DT_ROOT/$paraDir \
         -timesToRun $medianTimes \
-        -dependentTestFile $DT_ROOT/$paraList/"parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt"
+        -dependentTestFile $PARA_DT_LISTS/"parallelization-$SUBJ_NAME_FORMAL-$j-$k-original.txt"
     fi
 
     # [INFO] Running parallelization with resolveDependences and without dependentTestFile for time order
@@ -144,7 +144,7 @@ for j in "${testTypes[@]}"; do
         -testType $j \
         -timesToRun $medianTimes \
         -outputDir $DT_ROOT/$paraDir \
-        -dependentTestFile $DT_ROOT/$paraList/\"parallelization-$SUBJ_NAME_FORMAL-$j-$k-time.txt\""
+        -dependentTestFile $PARA_DT_LISTS/\"parallelization-$SUBJ_NAME_FORMAL-$j-$k-time.txt\""
       java -cp $CLASSPATH edu.washington.cs.dt.impact.runner.OneConfigurationRunner \
         -technique parallelization \
         -order time \
@@ -157,7 +157,7 @@ for j in "${testTypes[@]}"; do
         -testType $j \
         -timesToRun $medianTimes \
         -outputDir $DT_ROOT/$paraDir \
-        -dependentTestFile $DT_ROOT/$paraList/"parallelization-$SUBJ_NAME_FORMAL-$j-$k-time.txt"
+        -dependentTestFile $PARA_DT_LISTS/"parallelization-$SUBJ_NAME_FORMAL-$j-$k-time.txt"
     fi
   done
 
