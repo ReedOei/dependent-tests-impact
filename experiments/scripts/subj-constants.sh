@@ -10,8 +10,8 @@ expName=(
   ambari-server
   zeppelin-zengine
   zeppelin-server
-  xstream
-  pdfbox
+  # xstream
+  # pdfbox
   activemqCamel
 )
 # Directory for where all of the old subject's information is stored.
@@ -24,8 +24,8 @@ expDirectories=(
   ${rootDir}/ambari/ambari-server/target
   ${rootDir}/zeppelin/zeppelin-zengine/target
   ${rootDir}/zeppelin/zeppelin-server/target
-  ${rootDir}/xstream-1.2/xstream/target
-  ${rootDir}/pdfbox-old/pdfbox/target
+  # ${rootDir}/xstream-1.2/xstream/target
+  # ${rootDir}/pdfbox-old/pdfbox/target
   ${rootDir}/activemq-old/activemq-camel/target
 )
 # Classpath to run the old subject's automatically-generated and human-written tests.
@@ -38,8 +38,8 @@ expCP=(
   ${rootDir}/impact-tools/*:${rootDir}/ambari/ambari-server/target/classes/:${rootDir}/ambari/ambari-server/target/test-classes/:${rootDir}/ambari/ambari-server/target/dependency/*:${rootDir}/ambari/ambari-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
   ${rootDir}/impact-tools/*:${rootDir}/zeppelin/zeppelin-zengine/target/classes/:${rootDir}/zeppelin/zeppelin-zengine/target/test-classes/:${rootDir}/zeppelin/zeppelin-zengine/target/dependency/*:${rootDir}/zeppelin/zeppelin-zengine/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
   ${rootDir}/impact-tools/*:${rootDir}/zeppelin/zeppelin-server/target/classes/:${rootDir}/zeppelin/zeppelin-server/target/test-classes/:${rootDir}/zeppelin/zeppelin-server/target/dependency/*:${rootDir}/zeppelin/zeppelin-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
-  ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2/xstream/target/dependency/*:${rootDir}/xstream-1.2/xstream/target/classes:${rootDir}/xstream-1.2/xstream/target/randoop/bin:${rootDir}/xstream-1.2/xstream/target/test-classes:
-  ${rootDir}/impact-tools/*:${rootDir}/pdfbox-old/pdfbox/target/dependency/*:${rootDir}/pdfbox-old/pdfbox/target/classes:${rootDir}/pdfbox-old/pdfbox/target/randoop/bin:${rootDir}/pdfbox-old/pdfbox/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2/xstream/target/dependency/*:${rootDir}/xstream-1.2/xstream/target/classes:${rootDir}/xstream-1.2/xstream/target/randoop/bin:${rootDir}/xstream-1.2/xstream/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/pdfbox-old/pdfbox/target/dependency/*:${rootDir}/pdfbox-old/pdfbox/target/classes:${rootDir}/pdfbox-old/pdfbox/target/randoop/bin:${rootDir}/pdfbox-old/pdfbox/target/test-classes:
   ${rootDir}/impact-tools/*:${rootDir}/activemq-old/activemq-camel/target/dependency/*:${rootDir}/activemq-old/activemq-camel/target/classes:${rootDir}/activemq-old/activemq-camel/target/randoop/bin:${rootDir}/activemq-old/activemq-camel/target/test-classes:
 )
 # The name of the subject you want to be displayed in the paper (e.g., XML Security).
@@ -52,8 +52,8 @@ expNameFormal=(
   "Ambari-Server"
   "Zeppelin-Zengine"
   "Zeppelin-Server"
-  "XStream"
-  "PDFBox"
+  # "XStream"
+  # "PDFBox"
   "ActivemqCamel"
 )
 # Directory for where all of the new subject's information is stored.
@@ -66,8 +66,8 @@ nextExpDirectories=(
   ${rootDir}/ambari-new/ambari-server/target
   ${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target
   ${rootDir}/zeppelin-new/zeppelin-server/target
-  ${rootDir}/xstream-1.2.1/xstream/target
-  ${rootDir}/pdfbox-new/pdfbox/target
+  # ${rootDir}/xstream-1.2.1/xstream/target
+  # ${rootDir}/pdfbox-new/pdfbox/target
   ${rootDir}/activemq-new/activemq-camel/target
 )
 # Classpath to run the new subject's automatically-generated and human-written tests.
@@ -80,8 +80,8 @@ nextExpCP=(
   ${rootDir}/impact-tools/*:${rootDir}/ambari-new/ambari-server/target/classes/:${rootDir}/ambari-new/ambari-server/target/test-classes/:${rootDir}/ambari-new/ambari-server/target/dependency/*:${rootDir}/ambari-new/ambari-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
   ${rootDir}/impact-tools/*:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/classes/:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/test-classes/:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/dependency/*:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
   ${rootDir}/impact-tools/*:${rootDir}/zeppelin-new/zeppelin-server/target/classes/:${rootDir}/zeppelin-new/zeppelin-server/target/test-classes/:${rootDir}/zeppelin-new/zeppelin-server/target/dependency/*:${rootDir}/zeppelin-new/zeppelin-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
-  ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2.1/xstream/target/dependency/*:${rootDir}/xstream-1.2.1/xstream/target/classes:${rootDir}/xstream-1.2.1/xstream/target/randoop/bin:${rootDir}/xstream-1.2.1/xstream/target/test-classes:
-  ${rootDir}/impact-tools/*:${rootDir}/pdfbox-new/pdfbox/target/dependency/*:${rootDir}/pdfbox-new/pdfbox/target/classes:${rootDir}/pdfbox-new/pdfbox/target/randoop/bin:${rootDir}/pdfbox-new/pdfbox/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2.1/xstream/target/dependency/*:${rootDir}/xstream-1.2.1/xstream/target/classes:${rootDir}/xstream-1.2.1/xstream/target/randoop/bin:${rootDir}/xstream-1.2.1/xstream/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/pdfbox-new/pdfbox/target/dependency/*:${rootDir}/pdfbox-new/pdfbox/target/classes:${rootDir}/pdfbox-new/pdfbox/target/randoop/bin:${rootDir}/pdfbox-new/pdfbox/target/test-classes:
   ${rootDir}/impact-tools/*:${rootDir}/activemq-new/activemq-camel/target/dependency/*:${rootDir}/activemq-new/activemq-camel/target/classes:${rootDir}/activemq-new/activemq-camel/target/randoop/bin:${rootDir}/activemq-new/activemq-camel/target/test-classes:
 )
 # Directory containing the old subject's src directory. These directories contain projects that were originally built with Ant.
@@ -105,8 +105,8 @@ antMvnExp=(
   ${rootDir}/ambari/ambari-server
   ${rootDir}/zeppelin/zeppelin-zengine
   ${rootDir}/zeppelin/zeppelin-server
-  ${rootDir}/xstream-1.2/xstream
-  ${rootDir}/pdfbox-old/pdfbox
+  # ${rootDir}/xstream-1.2/xstream
+  # ${rootDir}/pdfbox-old/pdfbox
   ${rootDir}/activemq-old/activemq-camel
 )
 # Directory containing the new subject's src directory. These directories contain projects that were originally built with Maven.
@@ -114,7 +114,7 @@ antMvnNextExp=(
   ${rootDir}/ambari-new/ambari-server
   ${rootDir}/zeppelin-zengine-new/zeppelin-zengine
   ${rootDir}/zeppelin-new/zeppelin-server
-  ${rootDir}/xstream-1.2.1/xstream
-  ${rootDir}/pdfbox-new/pdfbox/
+  # ${rootDir}/xstream-1.2.1/xstream
+  # ${rootDir}/pdfbox-new/pdfbox/
   ${rootDir}/activemq-new/activemq-camel
 )
