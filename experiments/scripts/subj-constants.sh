@@ -118,3 +118,19 @@ antMvnNextExp=(
   # ${rootDir}/pdfbox-new/pdfbox/
   ${rootDir}/activemq-new/activemq-camel
 )
+antMvnCP=(
+  ${rootDir}/impact-tools/*:${rootDir}/ambari/ambari-server/target/classes/:${rootDir}/ambari/ambari-server/target/test-classes/:${rootDir}/ambari/ambari-server/target/dependency/*:${rootDir}/ambari/ambari-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  ${rootDir}/impact-tools/*:${rootDir}/zeppelin/zeppelin-zengine/target/classes/:${rootDir}/zeppelin/zeppelin-zengine/target/test-classes/:${rootDir}/zeppelin/zeppelin-zengine/target/dependency/*:${rootDir}/zeppelin/zeppelin-zengine/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  ${rootDir}/impact-tools/*:${rootDir}/zeppelin/zeppelin-server/target/classes/:${rootDir}/zeppelin/zeppelin-server/target/test-classes/:${rootDir}/zeppelin/zeppelin-server/target/dependency/*:${rootDir}/zeppelin/zeppelin-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  # ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2/xstream/target/dependency/*:${rootDir}/xstream-1.2/xstream/target/classes:${rootDir}/xstream-1.2/xstream/target/randoop/bin:${rootDir}/xstream-1.2/xstream/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/pdfbox-old/pdfbox/target/dependency/*:${rootDir}/pdfbox-old/pdfbox/target/classes:${rootDir}/pdfbox-old/pdfbox/target/randoop/bin:${rootDir}/pdfbox-old/pdfbox/target/test-classes:
+  ${rootDir}/impact-tools/*:${rootDir}/activemq-old/activemq-camel/target/dependency/*:${rootDir}/activemq-old/activemq-camel/target/classes:${rootDir}/activemq-old/activemq-camel/target/randoop/bin:${rootDir}/activemq-old/activemq-camel/target/test-classes:
+)
+antMvnNextCP=(
+  ${rootDir}/impact-tools/*:${rootDir}/ambari-new/ambari-server/target/classes/:${rootDir}/ambari-new/ambari-server/target/test-classes/:${rootDir}/ambari-new/ambari-server/target/dependency/*:${rootDir}/ambari-new/ambari-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  ${rootDir}/impact-tools/*:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/classes/:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/test-classes/:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/dependency/*:${rootDir}/zeppelin-zengine-new/zeppelin-zengine/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  ${rootDir}/impact-tools/*:${rootDir}/zeppelin-new/zeppelin-server/target/classes/:${rootDir}/zeppelin-new/zeppelin-server/target/test-classes/:${rootDir}/zeppelin-new/zeppelin-server/target/dependency/*:${rootDir}/zeppelin-new/zeppelin-server/target/randoop/bin/:/usr/lib/jvm/java-7-oracle/jre/lib/*:
+  # ${rootDir}/impact-tools/*:${rootDir}/xstream-1.2.1/xstream/target/dependency/*:${rootDir}/xstream-1.2.1/xstream/target/classes:${rootDir}/xstream-1.2.1/xstream/target/randoop/bin:${rootDir}/xstream-1.2.1/xstream/target/test-classes:
+  # ${rootDir}/impact-tools/*:${rootDir}/pdfbox-new/pdfbox/target/dependency/*:${rootDir}/pdfbox-new/pdfbox/target/classes:${rootDir}/pdfbox-new/pdfbox/target/randoop/bin:${rootDir}/pdfbox-new/pdfbox/target/test-classes:
+  ${rootDir}/impact-tools/*:${rootDir}/activemq-new/activemq-camel/target/dependency/*:${rootDir}/activemq-new/activemq-camel/target/classes:${rootDir}/activemq-new/activemq-camel/target/randoop/bin:${rootDir}/activemq-new/activemq-camel/target/test-classes:
+)

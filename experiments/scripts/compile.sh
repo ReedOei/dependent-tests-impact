@@ -5,11 +5,11 @@ source ./constants.sh
 #!/bin/bash
 
 compileRandoop() {
-  cd $DT_RANDOOP
-  javac -cp $DT_LIBS:$DT_CLASS:$DT_TOOLS: ErrorTest*.java RegressionTest*.java
-
-  cd $NEW_DT_RANDOOP
-  javac -cp $NEW_DT_LIBS:$NEW_DT_CLASS:$DT_TOOLS: ErrorTest*.java RegressionTest*.java
+  cd $1/target/randoop
+  javac -cp $2 ErrorTest*.java RegressionTest*.java
+  mkdir bin
+  mv *.class ./bin
+  cd $DT_ROOT/scripts
 }
 
 DT_ROOT=$1
@@ -28,8 +28,6 @@ while [ "$index" -lt "$count" ]; do
 
   ant -Dbasedir=$ANT_BASE_DIR -f $ANT_BASE_DIR/build.xml
 
-  compileRandoop
-
   let "index++"
 done
 
@@ -43,8 +41,6 @@ while [ "$index" -lt "$count" ]; do
 
   ant -Dbasedir=$ANT_BASE_DIR -f $ANT_BASE_DIR/build.xml
 
-  compileRandoop
-
   let "index++"
 done
 
@@ -55,10 +51,11 @@ index=0
 count=${#antMvnExp[@]}
 while [ "$index" -lt "$count" ]; do
   ANT_BASE_DIR=${antMvnExp[$index]}
+  EXP_DIR=${antMvnCP[$index]}
 
   ant -Dbasedir=$ANT_BASE_DIR -f $DT_ROOT/scripts/data/build.xml
 
-  compileRandoop
+  compileRandoop $ANT_BASE_DIR $EXP_DIR
 
   let "index++"
 done
@@ -70,10 +67,11 @@ index=0
 count=${#antMvnNextExp[@]}
 while [ "$index" -lt "$count" ]; do
   ANT_BASE_DIR=${antMvnNextExp[$index]}
+  EXP_DIR=${antMvnCP[$index]}
 
   ant -Dbasedir=$ANT_BASE_DIR -f $DT_ROOT/scripts/data/build.xml
-  
-  compileRandoop
+
+  compileRandoop $ANT_BASE_DIR $EXP_DIR
 
   let "index++"
 done
