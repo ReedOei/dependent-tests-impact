@@ -61,7 +61,7 @@ for k in "${testTypes[@]}"; do
           -getCoverage \
           -outputDir $DT_ROOT/$seleDir \
           -timesToRun $medianTimes \
-          -dependentTestFile $SELE_DT_LISTS/"selection-$SUBJ_NAME-$k-$i-$j.txt"
+          -dependentTestFile $SELE_DT_LISTS/"selection-$SUBJ_NAME_FORMAL-$k-$i-$j.txt"
       fi
 
       # [INFO] Running selection without resolveDependences and without dependentTestFile
