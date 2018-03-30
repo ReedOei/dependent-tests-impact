@@ -1,4 +1,4 @@
-ActivemqCamel|1
+ActivemqCamel|5
 Ambari-Server|18
 Crystal|18
 JFreechart|8
