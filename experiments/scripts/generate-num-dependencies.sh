@@ -1,7 +1,7 @@
 #!/bin/bash
 # Make sure we've found the human written tests in the new subject.
 cd $NEW_DT_SUBJ
-echo "[DEBUG] hi 30"
+echo "[DEBUG] Finding human written dts."
 java -cp $DT_TOOLS:$NEW_DT_LIBS:$NEW_DT_CLASS:$NEW_DT_TESTS: edu.washington.cs.dt.tools.UnitTestFinder \
   --pathOrJarFile $NEW_DT_TESTS --junit3and4=true
 mv allunittests.txt $SUBJ_NAME-orig-order
@@ -16,7 +16,7 @@ if [ ! -e $NEW_DT_SUBJ/$SUBJ_NAME-env-files ]; then
 fi
 
 cd $DT_SCRIPTS
-echo "[DEBUG] hi 31"
+echo "[DEBUG] Running one-subj.sh"
 bash $DT_SCRIPTS/one-subj.sh $DT_SUBJ $DT_ROOT $SUBJ_NAME "$SUBJ_NAME_FORMAL" \
   "$DT_TOOLS" "$DT_LIBS" $DT_CLASS $DT_RANDOOP $DT_TESTS false false $NEW_DT_SUBJ $ORIG_MIN_DTS $AUTO_MIN_DTS
 

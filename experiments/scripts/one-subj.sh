@@ -35,7 +35,7 @@ mkdir $DT_ROOT/${prioDir}
 ./subj-prio.sh $DT_SUBJ $DT_ROOT $SUBJ_NAME "$SUBJ_NAME_FORMAL" $NEW_DT_SUBJ false $PRECOMPUTE_DEPENDENCES $GEN_ENHANCED_RESULTS "$DT_TOOLS" "$DT_LIBS" $DT_CLASS $DT_RANDOOP $DT_TESTS
 
 # ======================================================
-# Only run selection if we are not calculating precomputed dependences since the selection precomputed dependences are generated from priorization and parallelization 
+# Only run selection if we are not calculating precomputed dependences since the selection precomputed dependences are generated from priorization and parallelization
 if [ "$PRECOMPUTE_DEPENDENCES" = "false" ]; then
   echo "[INFO] Running selection-runner script"
   rm -rf $DT_ROOT/${seleDir}
