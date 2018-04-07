@@ -9,4 +9,5 @@ XML Security|5
 XStream|35
 Zeppelin-Server|1
 Zeppelin-Zengine|30
+zeppelin-zeppelin-zengine|7
 

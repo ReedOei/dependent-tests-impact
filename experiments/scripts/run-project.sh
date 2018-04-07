@@ -11,7 +11,6 @@ if [[ "$#" -lt 1 ]]; then
 fi
 
 NEW_VERSION="HEAD"
-OLD_VERSION="HEAD~50"
 
 if [[ ! -z "$2" ]]; then
     NEW_VERSION=$2
@@ -19,11 +18,23 @@ fi
 
 if [[ ! -z "$3" ]]; then
     OLD_VERSION=$3
+else
+    OLD_VERSION="$NEW_VERSION~50"
 fi
 
 AUTOREMOVE="N"
 if [[ ! -z "$4" ]]; then
     AUTOREMOVE=$4
+fi
+
+MODULE_FILTER=".*"
+if [[ ! -z "$5" ]]; then
+    MODULE_FILTER="$5"
+fi
+
+SKIP_COMPILE="N"
+if [[ ! -z "$6" ]]; then
+    SKIP_COMPILE="$6"
 fi
 
 . ./setup-vars.sh # Set up the basic environment variables (e.g. $DT_ROOT)
@@ -37,46 +48,33 @@ echo
 echo "[INFO] Running for project: ${PROJ_NAME}"
 
 echo
-echo "[INFO] Cloning projects into $DT_ROOT/${PROJ_NAME}-new and $DT_ROOT/${PROJ_NAME}-old"
+echo "[INFO] Cloning project..."
+git clone "$1" "${PROJ_NAME}-temp"
+cd "${PROJ_NAME}-temp"
 
-if [[ -d "$DT_ROOT/${PROJ_NAME}-new" ]]; then
+NEW_COMMIT=`git rev-parse "$NEW_VERSION"`
+OLD_COMMIT=`git rev-parse "$OLD_VERSION"`
+export DT_SUBJ_ROOT="$DT_ROOT/${PROJ_NAME}-old-$OLD_COMMIT"
+export NEW_DT_SUBJ_ROOT="$DT_ROOT/${PROJ_NAME}-new-$NEW_COMMIT"
+echo "[INFO] Cloning projects into $NEW_DT_SUBJ_ROOT and $DT_SUBJ_ROOT"
+cd $DT_ROOT
+
+if [[ -d "$NEW_DT_SUBJ_ROOT" ]]; then
     if [[ "$AUTOREMOVE" == "Y" ]]; then
-        echo "[INFO] Autoremoving $DT_ROOT/${PROJ_NAME}-new because it already exists"
-        rm -rf "$DT_ROOT/${PROJ_NAME}-new"
-    else
-        echo "$DT_ROOT/${PROJ_NAME}-new already exists."
-        echo "Should I remove via 'rm -rf $DT_ROOT/${PROJ_NAME}-new' (Y/N)?"
-        read input
-
-        if [[ "$input" == "Y" ]]; then
-            rm -rf "$DT_ROOT/${PROJ_NAME}-new"
-        else
-            exit 1
-        fi
+        echo "[INFO] Autoremoving $NEW_DT_SUBJ_ROOT because it already exists"
+        rm -rf "$NEW_DT_SUBJ_ROOT"
     fi
 fi
-git clone "$1" "${PROJ_NAME}-new"
 
-if [[ -d "$DT_ROOT/${PROJ_NAME}-old" ]]; then
+if [[ -d "$DT_SUBJ_ROOT" ]]; then
     if [[ "$AUTOREMOVE" == "Y" ]]; then
-        echo "[INFO] Autoremoving $DT_ROOT/${PROJ_NAME}-old because it already exists"
-        rm -rf "$DT_ROOT/${PROJ_NAME}-old"
-    else
-        echo "$DT_ROOT/${PROJ_NAME}-old already exists."
-        echo "Should I remove via 'rm -rf $DT_ROOT/${PROJ_NAME}-old' (Y/N)?"
-        read input
-
-        if [[ "$input" == "Y" ]]; then
-            rm -rf "$DT_ROOT/${PROJ_NAME}-old"
-        else
-            exit 1
-        fi
+        echo "[INFO] Autoremoving $DT_SUBJ_ROOT because it already exists"
+        rm -rf "$DT_SUBJ_ROOT"
     fi
 fi
-git clone "$1" "${PROJ_NAME}-old"
 
-export DT_SUBJ_ROOT="$DT_ROOT/${PROJ_NAME}-old"
-export NEW_DT_SUBJ_ROOT="$DT_ROOT/${PROJ_NAME}-new"
+git clone "$1" "$NEW_DT_SUBJ_ROOT"
+git clone "$1" "$DT_SUBJ_ROOT"
 
 echo
 echo "[INFO] Resetting old version to $OLD_VERSION."
@@ -130,75 +128,79 @@ do
         new_module="${NEW_SUBJ_MODULES[$j]}"
 
         if [[ "${new_module}" == "${module}" ]]; then
-            echo
-            echo "[INFO] ${module} is in both the old and new versions, running tools."
+            if [[ "${new_module}" =~ $MODULE_FILTER ]]; then
+                echo
+                echo "[INFO] ${module} is in both the old and new versions, running tools."
 
-            if [[ ! -d "${OLD_SUBJ_MODULE_DIRS[$i]}/src/test/java" ]]; then
-                echo "[INFO] $module in the old subject has no test files, skipping."
+                if [[ ! -d "${OLD_SUBJ_MODULE_DIRS[$i]}/src/test/java" ]]; then
+                    echo "[INFO] $module in the old subject has no test files, skipping."
+                    break
+                fi
+
+                if [[ ! -d "${NEW_SUBJ_MODULE_DIRS[$j]}/src/test/java" ]]; then
+                    echo "[INFO] $module in the new subject has no test files, skipping."
+                    break
+                fi
+
+                echo "[INFO] Setting environment variables."
+                export DT_SUBJ=${OLD_SUBJ_MODULE_DIRS[$i]}/target
+                export DT_SUBJ_SRC=${OLD_SUBJ_MODULE_DIRS[$i]}
+
+                export NEW_DT_SUBJ=${NEW_SUBJ_MODULE_DIRS[$j]}/target
+                export NEW_DT_SUBJ_SRC=${NEW_SUBJ_MODULE_DIRS[$j]}
+
+                export SUBJ_NAME="${PROJ_NAME}-$module"
+                export SUBJ_NAME_FORMAL="${PROJ_NAME}-$module"
+
+                . $DT_SCRIPTS/setup-vars.sh
+
+                echo "export DT_SUBJ=$DT_SUBJ"
+                echo "export DT_SUBJ_SRC=$DT_SUBJ_SRC"
+                echo "export DT_CLASS=$DT_CLASS"
+                echo "export DT_TESTS=$DT_TESTS"
+                echo "export NEW_DT_SUBJ=$NEW_DT_SUBJ"
+                echo "export NEW_DT_SUBJ_SRC= $NEW_DT_SUBJ_SRC"
+                echo "export NEW_DT_CLASS=$NEW_DT_CLASS"
+                echo "export NEW_DT_TESTS=$NEW_DT_TESTS"
+                echo "export SUBJ_NAME=$SUBJ_NAME"
+                echo "export SUBJ_NAME_FORMAL=$SUBJ_NAME_FORMAL"
+
+                # Keep track that we tried this one:
+                echo "${PROJ_NAME}-$module" >> "$DT_SCRIPTS/modules-tried.txt"
+
+                echo
+                echo "[INFO] Calling main script: $DT_SCRIPTS/run-subj.sh"
+
+                # Save the results if we already did it.
+                if [[ -d "$DT_SCRIPTS/${SUBJ_NAME}-results" ]]; then
+                    echo "Moving from $DT_SCRIPTS/${SUBJ_NAME}-results to $DT_SCRIPTS/${SUBJ_NAME}-old-results"
+                    mv "$DT_SCRIPTS/${SUBJ_NAME}-results" "$DT_SCRIPTS/${SUBJ_NAME}-old-results"
+                fi
+
+                # Make sure compile-output exists
+                mkdir -p "$DT_SCRIPTS/compile-output"
+
+                mkdir "$DT_SCRIPTS/${SUBJ_NAME}-results"
+                cd $DT_SCRIPTS
+
+                bash run-subj.sh $SKIP_COMPILE |& tee "$DT_SCRIPTS/${SUBJ_NAME}-results/output.txt" | grep --line-buffered -v "Test being executed"
+
+                if [[ $? -eq 1 ]]; then
+                    echo "[INFO] Script failed. Continuing."
+                    break
+                fi
+
+                echo
+                echo "[INFO] Finished, copying results to ${SUBJ_NAME}-results"
+                mv figure* "$DT_SCRIPTS/${SUBJ_NAME}-results"
+                cp -r "$DT_ROOT/prioritization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+                cp -r "$DT_ROOT/selection-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+                cp -r "$DT_ROOT/parallelization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
+
                 break
+            else
+                echo "Skipping because ${new_module} does not match filter $MODULE_FILTER"
             fi
-
-            if [[ ! -d "${NEW_SUBJ_MODULE_DIRS[$j]}/src/test/java" ]]; then
-                echo "[INFO] $module in the new subject has no test files, skipping."
-                break
-            fi
-
-            echo "[INFO] Setting environment variables."
-            export DT_SUBJ=${OLD_SUBJ_MODULE_DIRS[$i]}/target
-            export DT_SUBJ_SRC=${OLD_SUBJ_MODULE_DIRS[$i]}
-
-            export NEW_DT_SUBJ=${NEW_SUBJ_MODULE_DIRS[$j]}/target
-            export NEW_DT_SUBJ_SRC=${NEW_SUBJ_MODULE_DIRS[$j]}
-
-            export SUBJ_NAME="${PROJ_NAME}-$module"
-            export SUBJ_NAME_FORMAL="${PROJ_NAME}-$module"
-
-            . $DT_SCRIPTS/setup-vars.sh
-
-            echo "DT_SUBJ: $DT_SUBJ"
-            echo "DT_SUBJ_SRC: $DT_SUBJ_SRC"
-            echo "DT_CLASS: $DT_CLASS"
-            echo "DT_TESTS: $DT_TESTS"
-            echo "NEW_DT_SUBJ: $NEW_DT_SUBJ"
-            echo "NEW_DT_SUBJ_SRC: $NEW_DT_SUBJ_SRC"
-            echo "NEW_DT_CLASS: $NEW_DT_CLASS"
-            echo "NEW_DT_TESTS: $NEW_DT_TESTS"
-            echo "SUBJ_NAME: $SUBJ_NAME"
-            echo "SUBJ_NAME_FORMAL: $SUBJ_NAME_FORMAL"
-
-            # Keep track that we tried this one:
-            echo "${PROJ_NAME}-$module" >> "$DT_SCRIPTS/modules-tried.txt"
-
-            echo
-            echo "[INFO] Calling main script: $DT_SCRIPTS/run-subj.sh"
-
-            # Save the results if we already did it.
-            if [[ -d "$DT_SCRIPTS/${SUBJ_NAME}-results" ]]; then
-                echo "Moving from $DT_SCRIPTS/${SUBJ_NAME}-results to $DT_SCRIPTS/${SUBJ_NAME}-old-results"
-                mv "$DT_SCRIPTS/${SUBJ_NAME}-results" "$DT_SCRIPTS/${SUBJ_NAME}-old-results"
-            fi
-
-            # Make sure compile-output exists
-            mkdir -p "$DT_SCRIPTS/compile-output"
-
-            mkdir "$DT_SCRIPTS/${SUBJ_NAME}-results"
-            cd $DT_SCRIPTS
-
-            bash run-subj.sh |& tee "$DT_SCRIPTS/${SUBJ_NAME}-results/output.txt" | grep --line-buffered -v "Test being executed"
-
-            if [[ $? -eq 1 ]]; then
-                echo "[INFO] Script failed. Continuing."
-                break
-            fi
-
-            echo
-            echo "[INFO] Finished, copying results to ${SUBJ_NAME}-results"
-            mv figure* "$DT_SCRIPTS/${SUBJ_NAME}-results"
-            cp -r "$DT_ROOT/prioritization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
-            cp -r "$DT_ROOT/selection-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
-            cp -r "$DT_ROOT/parallelization-results/" "$DT_SCRIPTS/${SUBJ_NAME}-results"
-
-            break
         fi
     done
 done

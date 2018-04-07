@@ -1,0 +1,4 @@
+ambari-ambari-server
+jfreechart-jfreechart
+activemq-activemq-camel
+zeppelin-zeppelin-zengine
