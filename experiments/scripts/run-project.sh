@@ -154,16 +154,22 @@ do
 
                 . $DT_SCRIPTS/setup-vars.sh
 
-                echo "export DT_SUBJ=$DT_SUBJ"
-                echo "export DT_SUBJ_SRC=$DT_SUBJ_SRC"
-                echo "export DT_CLASS=$DT_CLASS"
-                echo "export DT_TESTS=$DT_TESTS"
-                echo "export NEW_DT_SUBJ=$NEW_DT_SUBJ"
-                echo "export NEW_DT_SUBJ_SRC= $NEW_DT_SUBJ_SRC"
-                echo "export NEW_DT_CLASS=$NEW_DT_CLASS"
-                echo "export NEW_DT_TESTS=$NEW_DT_TESTS"
-                echo "export SUBJ_NAME=$SUBJ_NAME"
-                echo "export SUBJ_NAME_FORMAL=$SUBJ_NAME_FORMAL"
+                # Generate a setup script.
+                (
+                    echo "export DT_SUBJ_ROOT=$DT_SUBJ_ROOT"
+                    echo "export DT_SUBJ=$DT_SUBJ"
+                    echo "export DT_SUBJ_SRC=$DT_SUBJ_SRC"
+                    echo "export DT_CLASS=$DT_CLASS"
+                    echo "export DT_TESTS=$DT_TESTS"
+                    echo "export NEW_DT_SUBJ_ROOT=$NEW_DT_SUBJ_ROOT"
+                    echo "export NEW_DT_SUBJ=$NEW_DT_SUBJ"
+                    echo "export NEW_DT_SUBJ_SRC= $NEW_DT_SUBJ_SRC"
+                    echo "export NEW_DT_CLASS=$NEW_DT_CLASS"
+                    echo "export NEW_DT_TESTS=$NEW_DT_TESTS"
+                    echo "export SUBJ_NAME=$SUBJ_NAME"
+                    echo "export SUBJ_NAME_FORMAL=$SUBJ_NAME_FORMAL"
+                    echo ". ../setup-vars.sh"
+                ) | tee "$DT_SCRIPTS/${SUBJ_NAME}-results/setup-$SUBJ_NAME.sh"
 
                 # Keep track that we tried this one:
                 echo "${PROJ_NAME}-$module" >> "$DT_SCRIPTS/modules-tried.txt"
